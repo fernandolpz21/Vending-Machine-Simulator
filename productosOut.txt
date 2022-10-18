@@ -1,0 +1,1 @@
+(((quote R) 15 7) ((quote C) 13 8) ((quote D) 12 8) ((quote S) 12 8) ((quote T) 14 8))
