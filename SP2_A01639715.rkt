@@ -17,13 +17,13 @@ Fernando López Gómez | A01639715
 ;(define productos (read (open-input-file "productos.txt")))
 ;(define archivo-productos (open-output-file "productos.txt" #:exists `replace))
 
-(define archivo-monedas (open-input-file "monedas.txt"))
-(define monedas (read archivo-monedas))
+;(define archivo-monedas (open-input-file "monedas.txt"))
+;(define monedas (read archivo-monedas))
 (define transacciones (open-input-file "transacciones.txt"))
 
 
 ;--------------------------------------------------------------------------------------------------
-;************** UDATE FUNCTIONS ****************
+;************** UPDATE FUNCTIONS ****************
 
 (define (update-stock producto lista)
   ;Encontramos el producto que se vendió
@@ -37,13 +37,22 @@ Fernando López Gómez | A01639715
   )
 )
 
-(define (update-coins cambio)
-  (define archivo-monedas (open-input-file "monedas.txt"))
-  (define monedas (read archivo-monedas))
-  ;(map car monedas) ;Tipos de monedas
-  (close-input-port archivo-monedas)
-  
+(define (update-coins cambio monedas)
+  (cond
+    [(null? monedas) '()] 
+    ; Si es que si puede haber cambio con esa moneda y si hay
+    ; monedas disponibles
+    ;(quotient cambio (caar monedas)) --> Número de billetes posibles 
+    [(and (not(equal? (quotient cambio (caar monedas)) 0))
+          (>= (cdar monedas) (quotient cambio (caar monedas))))
+    (append (list(cons (caar monedas) (- (cdar monedas) (quotient cambio (caar monedas)))))
+            (update-coins (- cambio (* (quotient cambio (caar monedas)) (caar monedas))) (cdr monedas)))]
 
+    ;Si es que no hay monedas suficientes o la moneda excede al cambio
+    ;continúa con la siguiente moneda
+    [else (append (list(car monedas)) (update-coins cambio (cdr monedas)))]
+    )
+  
   )
 
 
@@ -68,18 +77,31 @@ Fernando López Gómez | A01639715
 
   ;Abrimos el archivo
   (define archivo-productos (open-output-file "productos.txt" #:exists `replace))
+  (define arch-monedas-in (open-input-file "monedas.txt"))
+  (define monedas (read arch-monedas-in))
+
+  
   ;Escribimos sobre él
   (write (update-stock producto lista-productos) archivo-productos)
   ;Cerramos y actualizamos
   (close-output-port archivo-productos)
+  
+  (define arch-monedas-out (open-output-file "monedasOut.txt" #:exists `replace))
 
-  ;(write (update-coins cambio) archivo-monedas)
+  (write (update-coins (-(apply + monedas-ingresadas)  precio-producto) monedas) arch-monedas-out)
+
+
+  
+  (close-output-port arch-monedas-out)
+  (close-input-port arch-monedas-in)
   
 
   ;UI
   (display "TRANSACCIÓN EXITOSA\n")
   (display "Cambio: ")
-  (display (- precio-producto(apply + monedas-ingresadas)))
+  (display (-(apply + monedas-ingresadas)  precio-producto))
+  (display "\n")
+  (display "------------------")
   (display "\n")
   )
 
@@ -88,7 +110,7 @@ Fernando López Gómez | A01639715
 (define (transacción-exitosa? producto precio-producto monedas-ingresadas lista-productos)
   ;Si el precio del producto es mayor o igual a la suma de las monedas
   ;involucradas en la transacción
-  (if (>= precio-producto(apply + monedas-ingresadas))
+  (if (>= (apply + monedas-ingresadas) precio-producto)
       (success producto precio-producto monedas-ingresadas lista-productos)
       (display "ERROR: No se han ingresado monedas suficientes")
       )
