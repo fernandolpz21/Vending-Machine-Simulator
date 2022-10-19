@@ -37,9 +37,25 @@ Fernando López Gómez | A01639715
   )
 )
 
-(define (update-coins cambio monedas)
+;Las monedas ingresadas son una lista ordenada de las monedas que se utilizaron
+(define (add-coins monedas monedas-ingresadas)
   (cond
     [(null? monedas) '()] 
+    ;Si no hay monedas ingresadas o no coinciden con el valor buscado, pasa a la siguiente moneda
+    [(or (null? monedas-ingresadas) (not(equal? (car monedas-ingresadas) (caar monedas))))
+     (append (list(car monedas)) (add-coins (cdr monedas) monedas-ingresadas))
+        ]
+    [else (append (list(cons (caar monedas) (+(cdar monedas)(count monedas-ingresadas (car monedas-ingresadas)))))
+                (add-coins (cdr monedas) (cut-list monedas-ingresadas (count monedas-ingresadas (car monedas-ingresadas)))))]
+    )
+  )
+
+
+
+
+(define (update-coins cambio monedas)
+  (cond
+    [(null? monedas) '()]
     ; Si es que si puede haber cambio con esa moneda y si hay
     ; monedas disponibles
     ;(quotient cambio (caar monedas)) --> Número de billetes posibles 
@@ -56,7 +72,7 @@ Fernando López Gómez | A01639715
   )
 
 
-  ;********************* FIND IN LIST FUNCTIONS ******************************
+  ;********************* LIST MUTATORS FUNCTIONS ******************************
 (define (find-product-price product list)
   ;Regresa el precio de un producto determinado
   (if (null? list)
@@ -68,6 +84,28 @@ Fernando López Gómez | A01639715
       )
   )
 
+;Contar elementos dentro de una lista plana ordenada
+(define (count list target)
+  (if (null? list)
+      0
+      (if (equal?(car list) target)
+          (+ 1 (count (cdr list) target))
+          (count (cdr list) target)
+          )
+      )
+  )
+
+;Cortar elementos de una lista
+(define (cut-list list spaces)
+  (if (equal? spaces 1)
+      (cdr list)
+      (cut-list (cdr list) (- spaces 1))
+      )
+  )
+                   
+      
+  
+ 
 
   ;******************* PROCESS STATE FUNCTIONS *******************
   
@@ -85,15 +123,22 @@ Fernando López Gómez | A01639715
   (write (update-stock producto lista-productos) archivo-productos)
   ;Cerramos y actualizamos
   (close-output-port archivo-productos)
-  
-  (define arch-monedas-out (open-output-file "monedasOut.txt" #:exists `replace))
 
-  (write (update-coins (-(apply + monedas-ingresadas)  precio-producto) monedas) arch-monedas-out)
+  (define arch-monedas-out (open-output-file "monedas.txt" #:exists `replace))
+  
+  
+  ;Para poder usar las monedas que ingresó a manera de cambio, debemos actualizar la lista de
+ ; las monedas disponibles antes, por lo que pasamos como parámetro a la función add-coins, que
+  ;regresa un arreglo actualizado con las monedas que agregó el usuario
+
+  (write (update-coins (-(apply + monedas-ingresadas)  precio-producto);cambio
+                       (add-coins monedas (sort monedas-ingresadas >)));monedas
+         arch-monedas-out)
 
 
   
   (close-output-port arch-monedas-out)
-  (close-input-port arch-monedas-in)
+  ;(close-input-port arch-monedas-in)
   
 
   ;UI
@@ -138,7 +183,7 @@ Fernando López Gómez | A01639715
 ;---------------------------
 (define (terminar-procesos arch)
   (display "\n")
-  (display "------ FIN DE PROCESOS ------ \n")
+  (display "----------- FIN DE PROCESOS ---------- \n")
   (display "GANANCIA OBTENIDA: ")
   (display "\n")
   (display "PRODUCTOS CON POCO INVENTARIO:")
