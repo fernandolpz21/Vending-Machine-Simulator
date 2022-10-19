@@ -71,7 +71,7 @@ Fernando López Gómez | A01639715
   )
 
 
-  ;********************* LIST MUTATORS FUNCTIONS ******************************
+  ;********************* LIST RELATED FUNCTIONS ******************************
 (define (find-product-price product list)
   ;Regresa el precio de un producto determinado
   (if (null? list)
@@ -79,6 +79,25 @@ Fernando López Gómez | A01639715
       (if (equal? product (caar list))
           (cadar list)
           (find-product-price product (cdr list))
+          )
+      )
+  )
+
+#|
+CHECA QUE SE PUEDA HACER UNA FUNCIÓN LAMBDA
+ESTÁS REPITIENDO CÓDIGO
+
+UITILIZA FUNCIONES DE PRIMER ORDEN
+-------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!---------------
+|#
+
+(define (find-product-stock product list)
+  ;Regresa el precio de un producto determinado
+  (if (null? list)
+      '()
+      (if (equal? product (caar list))
+          (caddar list)
+          (find-product-stock product (cdr list))
           )
       )
   )
@@ -154,10 +173,13 @@ Fernando López Gómez | A01639715
 (define (transacción-exitosa? producto precio-producto monedas-ingresadas lista-productos)
   ;Si el precio del producto es mayor o igual a la suma de las monedas
   ;involucradas en la transacción
-  (if (>= (apply + monedas-ingresadas) precio-producto)
-      (success producto precio-producto monedas-ingresadas lista-productos)
-      (display "ERROR: No se han ingresado monedas suficientes")
-      )
+  (cond
+    [(< (apply + monedas-ingresadas) precio-producto);Si la suma de las monedas no es suficiente
+        (display "ERROR: No se han ingresado monedas suficientes")]
+    [(equal? (find-product-stock producto lista-productos) 0) ; Si el stock está vacío
+        (display "ERROR: Producto no disponible")]
+    [else (success producto precio-producto monedas-ingresadas lista-productos)])
+  
   )
   
 ;---------------------------
