@@ -14,11 +14,6 @@ Fernando López Gómez | A01639715
 ;--------------------------------------------------------------------------------------------------
 ;********* DEFINIMOS CONSTANTES *************
 
-;(define productos (read (open-input-file "productos.txt")))
-;(define archivo-productos (open-output-file "productos.txt" #:exists `replace))
-
-;(define archivo-monedas (open-input-file "monedas.txt"))
-;(define monedas (read archivo-monedas))
 (define transacciones (open-input-file "transacciones.txt"))
 
 
@@ -45,8 +40,12 @@ Fernando López Gómez | A01639715
     [(or (null? monedas-ingresadas) (not(equal? (car monedas-ingresadas) (caar monedas))))
      (append (list(car monedas)) (add-coins (cdr monedas) monedas-ingresadas))
         ]
-    [else (append (list(cons (caar monedas) (+(cdar monedas)(count monedas-ingresadas (car monedas-ingresadas)))))
-                (add-coins (cdr monedas) (cut-list monedas-ingresadas (count monedas-ingresadas (car monedas-ingresadas)))))]
+    ;Agrega 1 a la cantidad de monedas actuales y corta la lista de monedas ingresadas
+    ;hasta que dejen de repetirse los valores
+    [else (append (list(cons (caar monedas)
+                             (+(cdar monedas)(count monedas-ingresadas (car monedas-ingresadas)))))
+                (add-coins (cdr monedas) (cut-list monedas-ingresadas
+                                                   (count monedas-ingresadas (car monedas-ingresadas)))))]
     )
   )
 
