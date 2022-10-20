@@ -14,7 +14,7 @@ Fernando López Gómez | A01639715
 ;--------------------------------------------------------------------------------------------------
 ;********* DEFINIMOS CONSTANTES *************
 
-(define transacciones (open-input-file "transacciones.txt"))
+
 
 
 ;--------------------------------------------------------------------------------------------------
@@ -120,9 +120,11 @@ UITILIZA FUNCIONES DE PRIMER ORDEN
       (cut-list (cdr list) (- spaces 1))
       )
   )
+
+
                    
       
-  
+
  
 
   ;******************* PROCESS STATE FUNCTIONS *******************
@@ -133,8 +135,8 @@ UITILIZA FUNCIONES DE PRIMER ORDEN
 
   ;Abrimos el archivo
   (define archivo-productos (open-output-file "productos.txt" #:exists `replace))
-  (define arch-monedas-in (open-input-file "monedas.txt"))
-  (define monedas (read arch-monedas-in))
+  (define monedas (read (open-input-file "monedas.txt")))
+  ;(define monedas (read arch-monedas-in))
 
   
   ;Escribimos sobre él
@@ -183,29 +185,32 @@ UITILIZA FUNCIONES DE PRIMER ORDEN
   )
   
 ;---------------------------
-(define (evalua arch transacción)
+(define (evalua transacciones)
   ;Para cada transacción leemos el archivo
   ;de productos para en caso de que este se haya actualizado
   (define productos (open-input-file "productos.txt"))
   (define listaProductos (read productos))
   ;Evaluamos si la transacción es posible
-  (transacción-exitosa? (car transacción)
-                        (find-product-price (car transacción) listaProductos)
-                        (cdr transacción)
+  (transacción-exitosa? (caar transacciones)
+                        (find-product-price (caar transacciones) listaProductos)
+                        (cdar transacciones)
                         listaProductos
                         )
 
   ;Cerramos el archivo de productos para que se actualice
   (close-input-port productos)
   ; Evaluamos la siguiente transacción
-  (leerTransacción arch (read arch))
+  (leerTransacción (cdr transacciones))
  )
 
 ;---------------------------
-(define (terminar-procesos arch)
+(define (terminar-procesos transacciones)
+  (define monedas (read (open-input-file "monedas.txt")))
+  (define productos (read (open-input-file "productos.txt")))
   (display "\n")
   (display "----------- FIN DE PROCESOS ---------- \n")
   (display "GANANCIA OBTENIDA: ")
+  ;(ganancia transacciones)
   (display "\n")
   (display "PRODUCTOS CON POCO INVENTARIO:")
   (display "\n")
@@ -213,14 +218,15 @@ UITILIZA FUNCIONES DE PRIMER ORDEN
   (display "\n")
   (display "MONEDAS CON POCO INVENTARIO:")
   
-  (close-input-port arch)
+
   )
-  ;---------------------------
-(define (leerTransacción arch last-read)
+
+;----------------------------------
+(define (leerTransacción transacciones)
   ;Leemos cada transacción.
-  (if (not(eof-object? last-read))
-      (evalua arch last-read)
-      (terminar-procesos arch)
+  (if (null? transacciones)   
+      (terminar-procesos transacciones)
+      (evalua transacciones)
    )
  )
 
@@ -229,8 +235,8 @@ UITILIZA FUNCIONES DE PRIMER ORDEN
 ; *************** PROGRAMA PRINCIPAL *********************************
 (define (main)
   (display "----- SISTEMA DE EVALUACIÓN DE TRANSACCIONES -----\n")
-
-  (leerTransacción transacciones (read transacciones))
+  (leerTransacción (read (open-input-file "transacciones.txt")))
+  (close-input-port(open-input-file "transacciones.txt"))
 
  )
 
