@@ -11,11 +11,6 @@ Fernando López Gómez | A01639715
 
 #lang racket
 
-;--------------------------------------------------------------------------------------------------
-;********* DEFINIMOS CONSTANTES *************
-
-
-
 
 ;--------------------------------------------------------------------------------------------------
 ;************** UPDATE FUNCTIONS ****************
@@ -111,7 +106,7 @@ UITILIZA FUNCIONES DE PRIMER ORDEN
           (count (cdr list) target)
           )
       )
-  )
+  ) 
 
 ;Cortar elementos de una lista
 (define (cut-list list spaces)
@@ -121,19 +116,6 @@ UITILIZA FUNCIONES DE PRIMER ORDEN
       )
   )
 
-;calcular la ganancia total del dia
-(define (ganancia transacciones)
-  (if (not (null? transacciones))
-      (+ (apply + (cdar transacciones)) (ganancia (cdr transacciones)))
-      0)
-  )
-#|
-LA FUNCIÓN GANANCIA TOMA EN CUENTA TODOS LOS PRODUCTOS DENTRO DE LA LISTA DE TRANSACCIONES
-ENTONCES NECESITAS UNA VARIABLE GLOBAL PARA PODER IR ACTUALIZANDO LAS TRANSACCIONES EXITOSAS
-
-
--------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   WWWARNINGGGGG   !!!!!!!!!!!!!!!!!---------------
-|#
 
 
                    
@@ -201,7 +183,7 @@ ENTONCES NECESITAS UNA VARIABLE GLOBAL PARA PODER IR ACTUALIZANDO LAS TRANSACCIO
   )
   
 ;---------------------------
-(define (evalua transacciones)
+(define (evalua transacciones monedas)
   ;Para cada transacción leemos el archivo
   ;de productos para en caso de que este se haya actualizado
   (define productos (open-input-file "productos.txt"))
@@ -216,34 +198,40 @@ ENTONCES NECESITAS UNA VARIABLE GLOBAL PARA PODER IR ACTUALIZANDO LAS TRANSACCIO
   ;Cerramos el archivo de productos para que se actualice
   (close-input-port productos)
   ; Evaluamos la siguiente transacción
-  (leerTransacción (cdr transacciones))
+  (leerTransacción (cdr transacciones) monedas)
  )
 
 ;---------------------------
-(define (terminar-procesos transacciones)
-  (define monedas (read (open-input-file "monedas.txt")))
+(define (terminar-procesos transacciones monedas-iniciales)
+  ;Volvemos a abrir los archivos para tener una versión actualizada de los datos
   (define productos (read (open-input-file "productos.txt")))
+  (define monedas-finales (read (open-input-file "monedas.txt")))
+  
   (display "\n")
   (display "----------- FIN DE PROCESOS ---------- \n")
   (display "GANANCIA OBTENIDA: ")
-  (display (ganancia transacciones))
+  (display (- (apply + (map cdr monedas-finales)) monedas-iniciales));NO FUNCIONA
   (display "\n")
-  (display "PRODUCTOS CON POCO INVENTARIO:")
-  (display (filter (lambda (x) (<= (cadr x) 2)) transacciones))
+  (display "PRODUCTOS CON POCO INVENTARIO: ")
+  (display (map car (filter (lambda (x) (<= (caddr x) 2)) productos)))
   (display "\n")
-  (display "MONEDAS CON MUCHO INVENTARIO")
+  (display "MONEDAS CON MUCHO INVENTARIO: ")
+  (display (map car (filter (lambda (x) (>= (cdr x) 35)) monedas-finales)))
   (display "\n")
-  (display "MONEDAS CON POCO INVENTARIO:")
+  (display "MONEDAS CON POCO INVENTARIO: ")
+  (display (map car (filter (lambda (x) (<= (cdr x) 5)) monedas-finales)))
   
-
+  (close-input-port (open-input-file "productos.txt"))
+  (close-input-port (open-input-file "monedas.txt"))
+  
+  
   )
 
 ;----------------------------------
-(define (leerTransacción transacciones)
-  ;Leemos cada transacción.
+(define (leerTransacción transacciones monedas-iniciales)
   (if (not(null? transacciones) ) 
-      (evalua transacciones)
-      '()
+      (evalua transacciones monedas-iniciales)
+      (terminar-procesos transacciones monedas-iniciales)
    )
  )
 
@@ -253,9 +241,10 @@ ENTONCES NECESITAS UNA VARIABLE GLOBAL PARA PODER IR ACTUALIZANDO LAS TRANSACCIO
 (define (main)
   (display "----- SISTEMA DE EVALUACIÓN DE TRANSACCIONES -----\n")
   (define transacciones(read (open-input-file "transacciones.txt")))
-  (leerTransacción transacciones)
-  (terminar-procesos transacciones)
+  (define monedas (read (open-input-file "monedas.txt")))
+  (leerTransacción transacciones (apply + (map cdr monedas)))
   (close-input-port(open-input-file "transacciones.txt"))
+  (close-input-port(open-input-file "monedas.txt"))
 
  )
 
