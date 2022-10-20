@@ -88,7 +88,7 @@ CHECA QUE SE PUEDA HACER UNA FUNCIÓN LAMBDA
 ESTÁS REPITIENDO CÓDIGO
 
 UITILIZA FUNCIONES DE PRIMER ORDEN
--------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!---------------
+-------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   WWWARNINGGGGG   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!---------------
 |#
 
 (define (find-product-stock product list)
@@ -121,9 +121,26 @@ UITILIZA FUNCIONES DE PRIMER ORDEN
       )
   )
 
+;calcular la ganancia total del dia
+(define (ganancia transacciones)
+  (if (not (null? transacciones))
+      (+ (apply + (cdar transacciones)) (ganancia (cdr transacciones)))
+      0)
+  )
+#|
+LA FUNCIÓN GANANCIA TOMA EN CUENTA TODOS LOS PRODUCTOS DENTRO DE LA LISTA DE TRANSACCIONES
+ENTONCES NECESITAS UNA VARIABLE GLOBAL PARA PODER IR ACTUALIZANDO LAS TRANSACCIONES EXITOSAS
+
+
+-------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   WWWARNINGGGGG   !!!!!!!!!!!!!!!!!---------------
+|#
+
 
                    
-      
+;(define productos con poco inventario)
+;(define monedas con mucho inventario)
+;(define monedas con poco inventario)
+
 
  
 
@@ -133,10 +150,9 @@ UITILIZA FUNCIONES DE PRIMER ORDEN
   ;Despliega información de la transacción y
   ;actualiza los datos de los productos en el archivo
 
-  ;Abrimos el archivo
+  ;Abrimos el archivo limpio
   (define archivo-productos (open-output-file "productos.txt" #:exists `replace))
   (define monedas (read (open-input-file "monedas.txt")))
-  ;(define monedas (read arch-monedas-in))
 
   
   ;Escribimos sobre él
@@ -177,9 +193,9 @@ UITILIZA FUNCIONES DE PRIMER ORDEN
   ;involucradas en la transacción
   (cond
     [(< (apply + monedas-ingresadas) precio-producto);Si la suma de las monedas no es suficiente
-        (display "ERROR: No se han ingresado monedas suficientes")]
+        (display "ERROR: No se han ingresado monedas suficientes\n")]
     [(equal? (find-product-stock producto lista-productos) 0) ; Si el stock está vacío
-        (display "ERROR: Producto no disponible")]
+        (display "ERROR: Producto no disponible\n")]
     [else (success producto precio-producto monedas-ingresadas lista-productos)])
   
   )
@@ -210,9 +226,10 @@ UITILIZA FUNCIONES DE PRIMER ORDEN
   (display "\n")
   (display "----------- FIN DE PROCESOS ---------- \n")
   (display "GANANCIA OBTENIDA: ")
-  ;(ganancia transacciones)
+  (display (ganancia transacciones))
   (display "\n")
   (display "PRODUCTOS CON POCO INVENTARIO:")
+  (display (filter (lambda (x) (<= (cadr x) 2)) transacciones))
   (display "\n")
   (display "MONEDAS CON MUCHO INVENTARIO")
   (display "\n")
@@ -224,9 +241,9 @@ UITILIZA FUNCIONES DE PRIMER ORDEN
 ;----------------------------------
 (define (leerTransacción transacciones)
   ;Leemos cada transacción.
-  (if (null? transacciones)   
-      (terminar-procesos transacciones)
+  (if (not(null? transacciones) ) 
       (evalua transacciones)
+      '()
    )
  )
 
@@ -235,7 +252,9 @@ UITILIZA FUNCIONES DE PRIMER ORDEN
 ; *************** PROGRAMA PRINCIPAL *********************************
 (define (main)
   (display "----- SISTEMA DE EVALUACIÓN DE TRANSACCIONES -----\n")
-  (leerTransacción (read (open-input-file "transacciones.txt")))
+  (define transacciones(read (open-input-file "transacciones.txt")))
+  (leerTransacción transacciones)
+  (terminar-procesos transacciones)
   (close-input-port(open-input-file "transacciones.txt"))
 
  )
