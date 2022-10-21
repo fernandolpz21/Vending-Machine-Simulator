@@ -13,17 +13,31 @@ Fernando López Gómez | A01639715
 
 
 ;--------------------------------------------------------------------------------------------------
+;************** LEEMOS Y CERRAMOS LOS ARCHIVOS ****************
+(define transacciones(read (open-input-file "transacciones.txt")))
+(define monedas (read (open-input-file "monedas.txt")))
+(define productos (read (open-input-file "productos.txt")))
+(close-input-port (open-input-file "transacciones.txt"))
+(close-input-port (open-input-file "monedas.txt"))
+(close-input-port (open-input-file "productos.txt"))
+
+
+
+
+
+
+;--------------------------------------------------------------------------------------------------
 ;************** UPDATE FUNCTIONS ****************
 
-(define (update-stock producto lista)
+(define (update-stock producto lista-productos)
   ;Encontramos el producto que se vendió
   ;y le restamos 1 al stock
   (cond
-    [(null? lista) '()]
-    [(equal? producto (caar lista))
-    (append (list (list(caar lista) (cadar lista) (- (caddar lista) 1)))
-            (update-stock producto (cdr lista)))]
-    [else (append (list(car lista)) (update-stock producto (cdr lista)))]
+    [(null? lista-productos) '()]
+    [(equal? producto (caar lista-productos))
+    (append (list (list(caar lista-productos) (cadar lista-productos) (- (caddar lista-productos) 1)))
+            (update-stock producto (cdr lista-productos)))]
+    [else (append (list(car lista-productos)) (update-stock producto (cdr lista-productos)))]
   )
 )
 
@@ -78,14 +92,6 @@ Fernando López Gómez | A01639715
       )
   )
 
-#|
-CHECA QUE SE PUEDA HACER UNA FUNCIÓN LAMBDA
-ESTÁS REPITIENDO CÓDIGO
-
-UITILIZA FUNCIONES DE PRIMER ORDEN
--------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   WWWARNINGGGGG   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!---------------
-|#
-
 (define (find-product-stock product list)
   ;Regresa el precio de un producto determinado
   (if (null? list)
@@ -97,7 +103,7 @@ UITILIZA FUNCIONES DE PRIMER ORDEN
       )
   )
 
-;Contar elementos dentro de una lista plana ordenada
+;Contar elementos dentro de una lista plana
 (define (count list target)
   (if (null? list)
       0
@@ -108,7 +114,7 @@ UITILIZA FUNCIONES DE PRIMER ORDEN
       )
   ) 
 
-;Cortar elementos de una lista
+;Cortar n elementos de una lista
 (define (cut-list list spaces)
   (if (equal? spaces 1)
       (cdr list)
@@ -116,122 +122,126 @@ UITILIZA FUNCIONES DE PRIMER ORDEN
       )
   )
 
-
-
-                   
-;(define productos con poco inventario)
-;(define monedas con mucho inventario)
-;(define monedas con poco inventario)
-
-
- 
-
   ;******************* PROCESS STATE FUNCTIONS *******************
   
-(define (success producto precio-producto monedas-ingresadas lista-productos)
-  ;Despliega información de la transacción y
-  ;actualiza los datos de los productos en el archivo
-
-  ;Abrimos el archivo limpio
-  (define archivo-productos (open-output-file "productos.txt" #:exists `replace))
-  (define monedas (read (open-input-file "monedas.txt")))
-
-  
-  ;Escribimos sobre él
-  (write (update-stock producto lista-productos) archivo-productos)
-  ;Cerramos y actualizamos
-  (close-output-port archivo-productos)
-
-  (define arch-monedas-out (open-output-file "monedas.txt" #:exists `replace))
-  
-  
-  ;Para poder usar las monedas que ingresó a manera de cambio, debemos actualizar la lista de
- ; las monedas disponibles antes, por lo que pasamos como parámetro a la función add-coins, que
-  ;regresa un arreglo actualizado con las monedas que agregó el usuario
-
-  (write (update-coins (-(apply + monedas-ingresadas)  precio-producto);cambio
-                       (add-coins monedas (sort monedas-ingresadas >)));monedas
-         arch-monedas-out)
-
-
-  
-  (close-output-port arch-monedas-out)
-  ;(close-input-port arch-monedas-in)
+(define (success producto precio-producto monedas-ingresadas transacciones-nueva)
   
 
-  ;UI
+        
+  ;Despliegue de información de la transacción
   (display "TRANSACCIÓN EXITOSA\n")
+  (display "Producto: ")
+  (display producto)
+  (display "\n")
+  (display "Precio: ")
+  (display precio-producto)
+  (display "\n")
+  (display "Monto ingresado: ")
+  (display (apply + monedas-ingresadas))
+  (display "\n")
   (display "Cambio: ")
   (display (-(apply + monedas-ingresadas)  precio-producto))
   (display "\n")
   (display "------------------")
   (display "\n")
+
+
+   #| 
+ 
+  Para poder actualizar productos y monedas, mandamos llamar a la función update-stock,
+    que regresa una lista con los productos actualizados
+
+   Para el caso de las monedas, se utiliza la función update-coins, la cual
+    tiene implicita la función add-coins, que se encarga de actualizar las monedas
+    con la cantidad que ingresó el usuario.
+ Una vez recibido esta nueva lista, genera otra lista que resta las monedas necesarias
+ para proporcionarle el cambio al usuario.
+  |#
+
+  ;Leemos la siguiente transacción
+  (leerTransacciones (cdr transacciones-nueva)
+                     (update-stock producto productos)
+                     (update-coins (-(apply + monedas-ingresadas)  precio-producto);cambio
+                       (add-coins monedas (sort monedas-ingresadas >))); monedas
+                     )
   )
 
 ;---------------------------
   
-(define (transacción-exitosa? producto precio-producto monedas-ingresadas lista-productos)
-  ;Si el precio del producto es mayor o igual a la suma de las monedas
-  ;involucradas en la transacción
-  (cond
-    [(< (apply + monedas-ingresadas) precio-producto);Si la suma de las monedas no es suficiente
-        (display "ERROR: No se han ingresado monedas suficientes\n")]
-    [(equal? (find-product-stock producto lista-productos) 0) ; Si el stock está vacío
-        (display "ERROR: Producto no disponible\n")]
-    [else (success producto precio-producto monedas-ingresadas lista-productos)])
-  
+(define (monedas-aceptadas? monedas-ingresadas monedas-disponibles)
+  (if (not(null? monedas-ingresadas)) 
+      (if (not (equal? (member (car monedas-ingresadas) monedas-disponibles) #f))
+          (monedas-aceptadas? (cdr monedas-ingresadas) monedas-disponibles)
+          #f); Si member retorna false la moneda no es válida
+      #t) ;si llega al final sin salirse retorna true
   )
+
+     
   
 ;---------------------------
-(define (evalua transacciones monedas)
-  ;Para cada transacción leemos el archivo
-  ;de productos para en caso de que este se haya actualizado
-  (define productos (open-input-file "productos.txt"))
-  (define listaProductos (read productos))
+(define (evalua transacciones productos monedas)
   ;Evaluamos si la transacción es posible
-  (transacción-exitosa? (caar transacciones)
-                        (find-product-price (caar transacciones) listaProductos)
-                        (cdar transacciones)
-                        listaProductos
-                        )
+  (cond
+    ;Si alguna moneda no es aceptada
+    [(not(monedas-aceptadas? (cdar transacciones) (map car monedas)))
+         (display "ERROR: No se ha aceptado alguna de las monedas\n")]
+    ;Si la suma de las monedas ingresadas no es suficiente
+    [(< (apply + (cdar transacciones)) (find-product-price (caar transacciones) productos))
+        (display "ERROR: No se han ingresado monedas suficientes\n")]
+    ; Si el stock está vacío
+    [(equal? (find-product-stock (caar transacciones) productos) 0) 
+        (display "ERROR: Producto no disponible\n")]
+    [else (success (caar transacciones);Producto
+                   (find-product-price (caar transacciones) productos);Precio
+                   (cdar transacciones);Monedas ingresadas
+                   transacciones);lista de transacciones
+          ])
 
-  ;Cerramos el archivo de productos para que se actualice
-  (close-input-port productos)
-  ; Evaluamos la siguiente transacción
-  (leerTransacción (cdr transacciones) monedas)
+  #|
+  !!Se están repitiendo mucho.. tienes que sacar esta instrucción de aquí
+  (leerTransacciones (cdr transacciones)
+                     productos
+                     monedas
+                     )
+ |#
+
  )
 
 ;---------------------------
-(define (terminar-procesos transacciones monedas-iniciales)
-  ;Volvemos a abrir los archivos para tener una versión actualizada de los datos
-  (define productos (read (open-input-file "productos.txt")))
-  (define monedas-finales (read (open-input-file "monedas.txt")))
-  
+(define (terminar-procesos productos monedas)
+
+  ;Mostramos los datos finales al usuario
   (display "\n")
   (display "----------- FIN DE PROCESOS ---------- \n")
   (display "GANANCIA OBTENIDA: ")
-  (display (- (apply + (map cdr monedas-finales)) monedas-iniciales));NO FUNCIONA
+  (display "YOUR_FUNCTION_HERE");(- (apply + (map cdr monedas-finales)) monedas-iniciales));NO FUNCIONA
   (display "\n")
   (display "PRODUCTOS CON POCO INVENTARIO: ")
   (display (map car (filter (lambda (x) (<= (caddr x) 2)) productos)))
   (display "\n")
   (display "MONEDAS CON MUCHO INVENTARIO: ")
-  (display (map car (filter (lambda (x) (>= (cdr x) 35)) monedas-finales)))
+  (display (map car (filter (lambda (x) (>= (cdr x) 35)) monedas)))
   (display "\n")
   (display "MONEDAS CON POCO INVENTARIO: ")
-  (display (map car (filter (lambda (x) (<= (cdr x) 5)) monedas-finales)))
+  (display (map car (filter (lambda (x) (<= (cdr x) 5)) monedas)))
+
+  ;Modificamos los archivos con los valores que resultaron
+  (define archivo-productos (open-output-file "productos.txt" #:exists `replace))
+  (write productos archivo-productos)
+  (close-output-port archivo-productos)
   
-  (close-input-port (open-input-file "productos.txt"))
-  (close-input-port (open-input-file "monedas.txt"))
+  (define archivo-monedas (open-output-file "monedas.txt" #:exists `replace))
+  (write monedas archivo-monedas)
+  (close-output-port archivo-monedas)
   
   
-  )
+)
 
 ;----------------------------------
-(define (leerTransacción transacciones monedas-iniciales)
-  (if (not(null? transacciones) ) 
-      (evalua transacciones monedas-iniciales)
-      (terminar-procesos transacciones monedas-iniciales)
+(define (leerTransacciones transacciones-nueva productos-nuevos monedas-nuevas)
+  (if (not(null? transacciones-nueva)) 
+      (evalua transacciones-nueva productos-nuevos monedas-nuevas)
+      (terminar-procesos productos-nuevos monedas-nuevas)
    )
  )
 
@@ -240,9 +250,8 @@ UITILIZA FUNCIONES DE PRIMER ORDEN
 ; *************** PROGRAMA PRINCIPAL *********************************
 (define (main)
   (display "----- SISTEMA DE EVALUACIÓN DE TRANSACCIONES -----\n")
-  (define transacciones(read (open-input-file "transacciones.txt")))
-  (define monedas (read (open-input-file "monedas.txt")))
-  (leerTransacción transacciones (apply + (map cdr monedas)))
+  
+  (leerTransacciones transacciones productos monedas)
   (close-input-port(open-input-file "transacciones.txt"))
   (close-input-port(open-input-file "monedas.txt"))
 
