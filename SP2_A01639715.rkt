@@ -214,13 +214,13 @@ Fernando López Gómez | A01639715
  )
 
 ;---------------------------
-(define (terminar-procesos productos monedas)
+(define (terminar-procesos productos monedas total-inicial)
 
   ;Mostramos los datos finales al usuario
   (display "\n")
   (display "----------- FIN DE PROCESOS ---------- \n")
   (display "GANANCIA OBTENIDA: ")
-  (display "YOUR_FUNCTION_HERE");(- (apply + (map cdr monedas-finales)) monedas-iniciales));NO FUNCIONA
+  (display (- (apply + (map (lambda (x) (* (car x) (cdr x))) monedas)) total-inicial))
   (display "\n")
   (display "PRODUCTOS CON POCO INVENTARIO: ")
   (display (map car (filter (lambda (x) (<= (caddr x) 2)) productos)))
@@ -247,7 +247,9 @@ Fernando López Gómez | A01639715
 (define (leerTransacciones transacciones-nueva productos-nuevos monedas-nuevas)
   (if (not(null? transacciones-nueva)) 
       (evalua transacciones-nueva productos-nuevos monedas-nuevas)
-      (terminar-procesos productos-nuevos monedas-nuevas)
+      (terminar-procesos productos-nuevos
+                         monedas-nuevas
+                        (apply + (map (lambda (x) (* (car x) (cdr x))) monedas)))
    )
  )
 
