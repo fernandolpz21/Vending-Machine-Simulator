@@ -22,7 +22,7 @@ Fernando López Gómez | A01639715
 (close-input-port (open-input-file "productos.txt"))
 
 
-
+;--------------------------------------------------------------------------------------------------
   ;********************* LIST RELATED FUNCTIONS ******************************
 (define (find-product-price product list)
   ;Regresa el precio de un producto determinado
@@ -99,8 +99,7 @@ Fernando López Gómez | A01639715
   )
 
 
-
-
+;Actualizamos inventario de monedas para el cambio
 (define (update-coins cambio monedas)
   (cond
     [(null? monedas) '()]
@@ -124,9 +123,6 @@ Fernando López Gómez | A01639715
   ;******************* PROCESS STATE FUNCTIONS *******************
   
 (define (success producto precio-producto monedas-ingresadas transacciones-nueva)
-  
-
-        
   ;Despliegue de información de la transacción
   (display "TRANSACCIÓN EXITOSA\n")
   (display "Producto: ")
@@ -166,7 +162,8 @@ Fernando López Gómez | A01639715
   )
 
 ;---------------------------
-  
+
+;Verificar que todas las monedas se encuentren en el inventario
 (define (monedas-aceptadas? monedas-ingresadas monedas-disponibles)
   (if (not(null? monedas-ingresadas)) 
       (if (not (equal? (member (car monedas-ingresadas) monedas-disponibles) #f))
@@ -249,6 +246,8 @@ Fernando López Gómez | A01639715
 )
 
 ;----------------------------------
+;Si la lista de transacciones está vacía, termina el programan de lo contrario evalúa
+;la lista
 (define (leerTransacciones transacciones-nueva productos-nuevos monedas-nuevas)
   (if (not(null? transacciones-nueva)) 
       (evalua transacciones-nueva productos-nuevos monedas-nuevas)
@@ -261,15 +260,9 @@ Fernando López Gómez | A01639715
 
 ;--------------------------------------------------------------------------------------------------
 ; *************** PROGRAMA PRINCIPAL *********************************
-(define (main)
-  (display "----- SISTEMA DE EVALUACIÓN DE TRANSACCIONES -----\n")
+
+(display "----- SISTEMA DE EVALUACIÓN DE TRANSACCIONES -----\n")
   
-  (leerTransacciones transacciones productos monedas)
-  (close-input-port(open-input-file "transacciones.txt"))
-  (close-input-port(open-input-file "monedas.txt"))
-
- )
-
-
-
-(main)
+(leerTransacciones transacciones productos monedas)
+(close-input-port(open-input-file "transacciones.txt"))
+(close-input-port(open-input-file "monedas.txt"))
