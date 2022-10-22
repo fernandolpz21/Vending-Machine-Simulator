@@ -23,7 +23,47 @@ Fernando López Gómez | A01639715
 
 
 
+  ;********************* LIST RELATED FUNCTIONS ******************************
+(define (find-product-price product list)
+  ;Regresa el precio de un producto determinado
+  (if (null? list)
+      '()
+      (if (equal? product (caar list))
+          (cadar list)
+          (find-product-price product (cdr list))
+          )
+      )
+  )
 
+(define (find-product-stock product list)
+  ;Regresa el precio de un producto determinado
+  (if (null? list)
+      '()
+      (if (equal? product (caar list))
+          (caddar list)
+          (find-product-stock product (cdr list))
+          )
+      )
+  )
+
+;Contar elementos dentro de una lista plana
+(define (count list target)
+  (if (null? list)
+      0
+      (if (equal?(car list) target)
+          (+ 1 (count (cdr list) target))
+          (count (cdr list) target)
+          )
+      )
+  ) 
+
+;Cortar n elementos de una lista
+(define (cut-list list spaces)
+  (if (equal? spaces 1)
+      (cdr list)
+      (cut-list (cdr list) (- spaces 1))
+      )
+  )
 
 
 ;--------------------------------------------------------------------------------------------------
@@ -80,47 +120,6 @@ Fernando López Gómez | A01639715
   )
 
 
-  ;********************* LIST RELATED FUNCTIONS ******************************
-(define (find-product-price product list)
-  ;Regresa el precio de un producto determinado
-  (if (null? list)
-      '()
-      (if (equal? product (caar list))
-          (cadar list)
-          (find-product-price product (cdr list))
-          )
-      )
-  )
-
-(define (find-product-stock product list)
-  ;Regresa el precio de un producto determinado
-  (if (null? list)
-      '()
-      (if (equal? product (caar list))
-          (caddar list)
-          (find-product-stock product (cdr list))
-          )
-      )
-  )
-
-;Contar elementos dentro de una lista plana
-(define (count list target)
-  (if (null? list)
-      0
-      (if (equal?(car list) target)
-          (+ 1 (count (cdr list) target))
-          (count (cdr list) target)
-          )
-      )
-  ) 
-
-;Cortar n elementos de una lista
-(define (cut-list list spaces)
-  (if (equal? spaces 1)
-      (cdr list)
-      (cut-list (cdr list) (- spaces 1))
-      )
-  )
 
   ;******************* PROCESS STATE FUNCTIONS *******************
   
@@ -176,13 +175,16 @@ Fernando López Gómez | A01639715
       #t) ;si llega al final sin salirse retorna true
   )
 
+;Desplegar errores y continuar con la lista de transacciones 
 (define (error-handler id-error transacciones)
   (cond
     [(equal? id-error 1)
-     (display "ERROR: No se ha aceptado alguna de las monedas\n")]
+     (display "ERROR: No se han ingresado monedas\n")]
     [(equal? id-error 2)
-     (display "ERROR: No se han ingresado monedas suficientes\n")]
+     (display "ERROR: No se ha aceptado alguna de las monedas\n")]
     [(equal? id-error 3)
+     (display "ERROR: No se han ingresado monedas suficientes\n")]
+    [(equal? id-error 4)
      (display "ERROR: Producto no disponible\n")]
     )
   (leerTransacciones (cdr transacciones)
@@ -196,15 +198,18 @@ Fernando López Gómez | A01639715
 (define (evalua transacciones productos monedas)
   ;Evaluamos si la transacción es posible
   (cond
+    ;Si la lista de monedas que ingresó está vacía
+    [(null? monedas)
+         (error-handler 1 transacciones)]
     ;Si alguna moneda no es aceptada
     [(not(monedas-aceptadas? (cdar transacciones) (map car monedas)))
-         (error-handler 1 transacciones)]
+         (error-handler 2 transacciones)]
     ;Si la suma de las monedas ingresadas no es suficiente
     [(< (apply + (cdar transacciones)) (find-product-price (caar transacciones) productos))
-        (error-handler 2 transacciones)]
+        (error-handler 3 transacciones)]
     ; Si el stock está vacío
     [(equal? (find-product-stock (caar transacciones) productos) 0) 
-        (error-handler 3 transacciones)]
+        (error-handler 4 transacciones)]
     [else (success (caar transacciones);Producto
                    (find-product-price (caar transacciones) productos);Precio
                    (cdar transacciones);Monedas ingresadas
