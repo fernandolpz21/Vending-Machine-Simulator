@@ -80,7 +80,7 @@ Fernando López Gómez | A01639715
     [else (append (list(car lista-productos)) (update-stock producto (cdr lista-productos)))]
   )
 )
-
+;---------------------------
 ;Las monedas ingresadas son una lista ordenada de las monedas que se utilizaron
 (define (add-coins monedas monedas-ingresadas)
   (cond
@@ -197,6 +197,7 @@ Fernando López Gómez | A01639715
       #t) ;si llega al final sin salirse retorna true
   )
 
+;---------------------------
 ;Desplegar errores y continuar con la lista de transacciones 
 (define (error-handler id-error transacciones productos monedas)
   (display "\n")
@@ -233,7 +234,8 @@ Fernando López Gómez | A01639715
     [(equal? (find-product-stock (caar transacciones) productos) 0) 
         (error-handler 3 transacciones productos monedas)]
     ;Si la máquina no cuenta con cambio
-    [(not (cambio? (-(apply + (cdar transacciones)) (find-product-price (caar transacciones) productos))
+    [(not (cambio? (-(apply + (cdar transacciones))
+                     (find-product-price (caar transacciones) productos))
                     monedas))
         (error-handler 4 transacciones productos monedas)]
     [else (success (caar transacciones);Producto
