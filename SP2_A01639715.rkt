@@ -105,7 +105,7 @@ Fernando López Gómez | A01639715
     [(null? monedas) '()]
     ; Si es que si puede haber cambio con esa moneda y si hay
     ; monedas disponibles
-    ;(quotient cambio (caar monedas)) --> Número de billetes posibles 
+    ;(quotient cambio (caar monedas)) --> Número de monedas posibles 
     [(and (not(equal? (quotient cambio (caar monedas)) 0))
           (>= (cdar monedas) (quotient cambio (caar monedas))))
     (append (list(cons (caar monedas) (- (cdar monedas) (quotient cambio (caar monedas)))))
@@ -173,7 +173,7 @@ Fernando López Gómez | A01639715
   )
 
 ;Desplegar errores y continuar con la lista de transacciones 
-(define (error-handler id-error transacciones)
+(define (error-handler id-error transacciones productos monedas)
   (cond
     [(equal? id-error 1)
      (display "ERROR: No se han ingresado monedas\n")]
@@ -197,16 +197,16 @@ Fernando López Gómez | A01639715
   (cond
     ;Si la lista de monedas que ingresó está vacía
     [(null? monedas)
-         (error-handler 1 transacciones)]
+         (error-handler 1 transacciones productos monedas)]
     ;Si alguna moneda no es aceptada
     [(not(monedas-aceptadas? (cdar transacciones) (map car monedas)))
-         (error-handler 2 transacciones)]
+         (error-handler 2 transacciones productos monedas)]
     ;Si la suma de las monedas ingresadas no es suficiente
     [(< (apply + (cdar transacciones)) (find-product-price (caar transacciones) productos))
-        (error-handler 3 transacciones)]
+        (error-handler 3 transacciones productos monedas)]
     ; Si el stock está vacío
     [(equal? (find-product-stock (caar transacciones) productos) 0) 
-        (error-handler 4 transacciones)]
+        (error-handler 4 transacciones productos monedas)]
     [else (success (caar transacciones);Producto
                    (find-product-price (caar transacciones) productos);Precio
                    (cdar transacciones);Monedas ingresadas
@@ -225,7 +225,7 @@ Fernando López Gómez | A01639715
   (display (- (apply + (map (lambda (x) (* (car x) (cdr x))) monedas)) total-inicial))
   (display "\n")
   (display "PRODUCTOS CON POCO INVENTARIO: ")
-  (display (map car (filter (lambda (x) (<= (caddr x) 2)) productos)))
+  (display (map car (filter (lambda (x) (<= (caddr x) 3)) productos)))
   (display "\n")
   (display "MONEDAS CON MUCHO INVENTARIO: ")
   (display (map car (filter (lambda (x) (>= (cdr x) 35)) monedas)))
