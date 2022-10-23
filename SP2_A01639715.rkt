@@ -176,12 +176,10 @@ Fernando López Gómez | A01639715
 (define (error-handler id-error transacciones productos monedas)
   (cond
     [(equal? id-error 1)
-     (display "ERROR: No se han ingresado monedas\n")]
-    [(equal? id-error 2)
      (display "ERROR: No se ha aceptado alguna de las monedas\n")]
-    [(equal? id-error 3)
+    [(equal? id-error 2)
      (display "ERROR: No se han ingresado monedas suficientes\n")]
-    [(equal? id-error 4)
+    [(equal? id-error 3)
      (display "ERROR: Producto no disponible\n")]
     )
   (leerTransacciones (cdr transacciones)
@@ -195,18 +193,15 @@ Fernando López Gómez | A01639715
 (define (evalua transacciones productos monedas)
   ;Evaluamos si la transacción es posible
   (cond
-    ;Si la lista de monedas que ingresó está vacía
-    [(null? monedas)
-         (error-handler 1 transacciones productos monedas)]
     ;Si alguna moneda no es aceptada
     [(not(monedas-aceptadas? (cdar transacciones) (map car monedas)))
-         (error-handler 2 transacciones productos monedas)]
+         (error-handler 1 transacciones productos monedas)]
     ;Si la suma de las monedas ingresadas no es suficiente
     [(< (apply + (cdar transacciones)) (find-product-price (caar transacciones) productos))
-        (error-handler 3 transacciones productos monedas)]
+        (error-handler 2 transacciones productos monedas)]
     ; Si el stock está vacío
     [(equal? (find-product-stock (caar transacciones) productos) 0) 
-        (error-handler 4 transacciones productos monedas)]
+        (error-handler 3 transacciones productos monedas)]
     [else (success (caar transacciones);Producto
                    (find-product-price (caar transacciones) productos);Precio
                    (cdar transacciones);Monedas ingresadas
