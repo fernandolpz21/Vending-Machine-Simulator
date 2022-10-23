@@ -118,6 +118,28 @@ Fernando López Gómez | A01639715
   
   )
 
+;Esta función se encarga únicamente de ssaber si es posible dar cambio.
+(define (cambio? cambio monedas)
+  (cond
+    ;Si ya no hay monedas por evaluar. Si no hay cambio restante entonces
+    ;si se puede dar cambio
+    [(null? monedas)
+     (if (equal? cambio 0)
+         #t
+         #f)]
+    ; Si es que si puede haber cambio con esa moneda y si hay
+    ; monedas disponibles
+    ;(quotient cambio (caar monedas)) --> Número de monedas posibles 
+    [(and (not(equal? (quotient cambio (caar monedas)) 0))
+          (>= (cdar monedas) (quotient cambio (caar monedas))))
+        (cambio? (- cambio (* (quotient cambio (caar monedas)) (caar monedas))) (cdr monedas))]
+
+    ;Si es que no hay monedas suficientes o la moneda excede al cambio
+    ;continúa con la siguiente moneda
+    [else (cambio? cambio (cdr monedas))]
+    )
+  )
+
 
 
   ;******************* PROCESS STATE FUNCTIONS *******************
@@ -174,6 +196,7 @@ Fernando López Gómez | A01639715
 
 ;Desplegar errores y continuar con la lista de transacciones 
 (define (error-handler id-error transacciones productos monedas)
+  (display "\n")
   (cond
     [(equal? id-error 1)
      (display "ERROR: No se ha aceptado alguna de las monedas\n")]
@@ -181,7 +204,11 @@ Fernando López Gómez | A01639715
      (display "ERROR: No se han ingresado monedas suficientes\n")]
     [(equal? id-error 3)
      (display "ERROR: Producto no disponible\n")]
+    [(equal? id-error 4)
+     (display "ERROR: No hay cambio suficiente\n")]
     )
+  (display "------------------")
+  (display "\n")
   (leerTransacciones (cdr transacciones)
                      productos
                      monedas
@@ -202,6 +229,9 @@ Fernando López Gómez | A01639715
     ; Si el stock está vacío
     [(equal? (find-product-stock (caar transacciones) productos) 0) 
         (error-handler 3 transacciones productos monedas)]
+    [(not (cambio? (-(apply + (cdar transacciones)) (find-product-price (caar transacciones) productos))
+                    monedas))
+        (error-handler 4 transacciones productos monedas)]
     [else (success (caar transacciones);Producto
                    (find-product-price (caar transacciones) productos);Precio
                    (cdar transacciones);Monedas ingresadas
