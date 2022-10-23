@@ -97,7 +97,7 @@ Fernando López Gómez | A01639715
                                                    (count monedas-ingresadas (car monedas-ingresadas)))))]
     )
   )
-
+;---------------------------
 
 ;Actualizamos inventario de monedas para el cambio
 (define (update-coins cambio monedas)
@@ -117,6 +117,9 @@ Fernando López Gómez | A01639715
     )
   
   )
+
+;---------------------------
+
 
 ;Esta función se encarga únicamente de ssaber si es posible dar cambio.
 (define (cambio? cambio monedas)
@@ -141,7 +144,7 @@ Fernando López Gómez | A01639715
   )
 
 
-
+;--------------------------------------------------------------------------------------------------
   ;******************* PROCESS STATE FUNCTIONS *******************
   
 (define (success producto precio-producto monedas-ingresadas transacciones-nueva)
@@ -229,6 +232,7 @@ Fernando López Gómez | A01639715
     ; Si el stock está vacío
     [(equal? (find-product-stock (caar transacciones) productos) 0) 
         (error-handler 3 transacciones productos monedas)]
+    ;Si la máquina no cuenta con cambio
     [(not (cambio? (-(apply + (cdar transacciones)) (find-product-price (caar transacciones) productos))
                     monedas))
         (error-handler 4 transacciones productos monedas)]
@@ -289,5 +293,4 @@ Fernando López Gómez | A01639715
 (display "----- SISTEMA DE EVALUACIÓN DE TRANSACCIONES -----\n")
   
 (leerTransacciones transacciones productos monedas)
-(close-input-port(open-input-file "transacciones.txt"))
-(close-input-port(open-input-file "monedas.txt"))
+
