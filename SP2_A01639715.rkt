@@ -91,7 +91,7 @@ Fernando López Gómez | A01639715
         ]
     ;Agrega 1 a la cantidad de monedas actuales y corta la lista de monedas ingresadas
     ;hasta que dejen de repetirse los valores
-    [else (append (list(cons (caar monedas)
+    [else (append (list(cons (caar monedas) 
                              (+(cdar monedas)(count monedas-ingresadas (car monedas-ingresadas)))))
                 (add-coins (cdr monedas) (cut-list monedas-ingresadas
                                                    (count monedas-ingresadas (car monedas-ingresadas)))))]
@@ -147,7 +147,7 @@ Fernando López Gómez | A01639715
 ;--------------------------------------------------------------------------------------------------
   ;******************* PROCESS STATE FUNCTIONS *******************
   
-(define (success producto precio-producto monedas-ingresadas transacciones-nueva)
+(define (success producto precio-producto monedas-actuales monedas-ingresadas transacciones-nueva)
   ;Despliegue de información de la transacción
   (display "TRANSACCIÓN EXITOSA\n")
   (display "Producto: ")
@@ -182,7 +182,8 @@ Fernando López Gómez | A01639715
   (leerTransacciones (cdr transacciones-nueva)
                      (update-stock producto productos)
                      (update-coins (-(apply + monedas-ingresadas)  precio-producto);cambio
-                       (add-coins monedas (sort monedas-ingresadas >))); monedas
+                       (add-coins monedas-actuales
+                                  (sort monedas-ingresadas >))); monedas
                      )
   )
 
@@ -240,6 +241,7 @@ Fernando López Gómez | A01639715
         (error-handler 4 transacciones productos monedas)]
     [else (success (caar transacciones);Producto
                    (find-product-price (caar transacciones) productos);Precio
+                   monedas; lista de monedas actuales
                    (cdar transacciones);Monedas ingresadas
                    transacciones);lista de transacciones
           ])
